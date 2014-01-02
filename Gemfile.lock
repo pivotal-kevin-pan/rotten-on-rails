@@ -110,7 +110,7 @@ GEM
       json (>= 1.8.0)
 
 DEPENDENCIES
-  coffee-rails (~> 4.0.0)
+  coffee-rails
   jbuilder (~> 1.2)
   jquery-rails
   pg
