@@ -3,7 +3,7 @@ class MainController < ApplicationController
 	@@blockBusterMovies = 'http://api.rottentomatoes.com/api/public/v1.0/lists/movies/box_office.json?limit=10&country=ca&apikey=';
 	@@idSearchMovies = 'http://api.rottentomatoes.com/api/public/v1.0/movies/'
 
-	before_filter :requireNetHttp, :only => [:home]
+	before_filter :requireNetHttp, :only => [:home, :movieInfo]
 
 	def requireNetHttp
 		require 'net/http'
@@ -24,7 +24,7 @@ class MainController < ApplicationController
 	def movieInfo
 		if params[:ajax] != 'true'
 			uri = URI(@@idSearchMovies + params[:id] + '.json?apikey=' + @@key)
-			@req = Net::HTTP.get(uri)
+			@req = Zlib::GzipReader.new(StringIO.new(Net::HTTP.get(uri))).read
 			@page = 'movieInfo'
 		else
 			render :layout => false
