@@ -1,7 +1,6 @@
 RottenOnRails::Application.routes.draw do
-  get "foo_bars/baz"
-  get "foo_bars/quux"
-  root to: 'foo_bars#baz'
+  get "main/home"
+  get "main/movieInfo"
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 

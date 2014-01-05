@@ -1,0 +1,16 @@
+<%= content_tag :div, class: "temp_information", data: {temp: @req, page: @page} do %>
+<% end %>
+<div id='backButton'></div>
+<h1></h1>
+<div id="summary">
+	<div id="summary_colone">
+		<img id='image'/>
+	</div>
+	<div id="summary_coltwo">
+		<div><span class="header">Runtime: </span><span id="runtime"></span> minutes</div>
+		<div><span class="header">Rotten Tomatoes Score: </span><span id="score"></span>%</div>
+		<div><span class="header">Critics Consensus:</span><div id="critics_consensus"></div></div>
+		<div><span class="header">Synopsis:</span><div id="synopsis"></div></div>
+		<div><span class="header">Cast:</span><div id="cast"></div></div>
+	</div>
+</div>
