@@ -23,8 +23,14 @@ class MainController < ApplicationController
 
 	def movieInfo
 		if params[:ajax] != 'true'
-			uri = URI(@@idSearchMovies + params[:id] + '.json?apikey=' + @@key)
-			@req = Zlib::GzipReader.new(StringIO.new(Net::HTTP.get(uri))).read
+			uri = URI.parse(@@idSearchMovies + params[:id] + '.json?apikey=' + @@key)
+			@req = Net::HTTP.get_response(uri)
+
+			if (@req["content-encoding"] == 'gzip')
+				@req = Zlib::GzipReader.new(StringIO.new(@req.body)).read
+			else
+				@req = @req.body
+			end
 			@page = 'movieInfo'
 		else
 			render :layout => false
