@@ -13,7 +13,7 @@ class MainController < ApplicationController
 		if params[:ajax] != 'true' or params[:load] == 'true'
 			uri = URI(@@blockBusterMovies + @@key)
 			@req = Net::HTTP.get(uri)
-			@page = 'home'
+			@page = ''
 		end
 
 		if params[:ajax] == 'true'

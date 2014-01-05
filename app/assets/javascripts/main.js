@@ -21,7 +21,7 @@ $(function() {
     	}
 	} );
 
-	if (page === 'home') {
+	if (page === '') {
 		movies = data.movies;
 	} else {
 		selectedMovie = data;
@@ -43,11 +43,11 @@ function createDivArray (size) {
 function ajaxNavigate(page) {
 	var publicParams = '';
 	var hiddenParams = '';
-	if (page === 'home') {
+	if (page === '') {
 		hiddenParams = 'ajax=true';
 		if (typeof movies === 'undefined') hiddenParams += '&load=true';
 		var request = $.ajax({
-			url: "/main/" + page,
+			url: '/',
 			type: "get",
 			data: publicParams + hiddenParams
 		});	
@@ -55,7 +55,7 @@ function ajaxNavigate(page) {
 		publicParams = "?id=" + selectedMovie.id;
 		hiddenParams = "&ajax=true";
 		var request = $.ajax({
-			url: "/main/" + page,
+			url: "/" + page,
 			type: "get",
 			data: publicParams + hiddenParams
 		});
@@ -64,12 +64,12 @@ function ajaxNavigate(page) {
 		document.body.style.display = 'block';
 		document.body.innerHTML = response;
 		pageSetup(page);
-		window.history.pushState({page:page}, '', '/main/' + page + publicParams);
+		window.history.pushState({page:page}, '', '/' + page + publicParams);
 	});
 }
 
 function pageSetup(page) {
-	if (page === 'home') {
+	if (page === '') {
 		if (typeof movies === 'undefined') {
 			var data = jQuery.parseJSON( $('.temp_information').data('temp') );
 			movies = data.movies;
@@ -117,7 +117,7 @@ function pageSetup(page) {
 		document.getElementById('synopsis').innerHTML = selectedMovie.synopsis;
 		$( '#backButton' ).click( function () {
 			$( 'body' ).fadeOut( 120, function() {
-				ajaxNavigate( 'home' );
+				ajaxNavigate( '' );
 			} );
 		});
 
