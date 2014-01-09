@@ -1,0 +1,13 @@
+<%= content_tag :div, class: "pageInfo infoContainer", data: {temp: @page} do %>
+<% end %>
+<%= content_tag :div, class: "searchInfo infoContainer", data: {temp: @search, searchString: @searchString} do %>
+<% end %>
+
+<div id="search-logo-wrapper" class="search-center">
+	<div id="logo-center">Rotten Tomatoes Search</div>
+	<form class="form-wrapper cf" id="searchForm">
+        <input type="text" placeholder="Search here..." required>
+        <button type="submit">Search</button>
+        <div class="clearFloats"></div>
+    </form> 
+</div>

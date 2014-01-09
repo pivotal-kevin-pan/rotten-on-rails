@@ -1,6 +1,7 @@
 RottenOnRails::Application.routes.draw do
   root to: 'main#home'
   get '/movieInfo', to: 'main#movieInfo'
+  get '/search', to: 'main#search'
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 

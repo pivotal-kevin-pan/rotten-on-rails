@@ -1,4 +1,6 @@
-<%= content_tag :div, class: "temp_information", data: {temp: @req, page: @page} do %>
+<%= content_tag :div, class: "pageInfo infoContainer", data: {temp: @page} do %>
+<% end %>
+<%= content_tag :div, class: "selectedMovieInfo infoContainer", data: {temp: @req} do %>
 <% end %>
 <div id='backButton'></div>
 <h1></h1>

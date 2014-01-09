@@ -1,5 +1,14 @@
 var selectedMovie;
-var movies;
+var blockbusterMovies;
+var inTheatreMovies;
+var openingMovies;
+var searchMovies;
+
+pageMappings = {
+	HOME : '',
+	MOVIEINFO : 'movieInfo',
+	SEARCH: 'search'
+}
 
 $(function() {
 	// var request = $.ajax({
@@ -10,105 +19,89 @@ $(function() {
 	// 	alert(dataWeGotViaJsonp.movies.length);
 	// });
 
-	var data = jQuery.parseJSON( $('.temp_information').data('temp') );
-	var page = $('.temp_information').data('page');
-	var urlParams = '';
-	var movies;
+	var page = $('.pageInfo').data('temp');
+	var searchString = '';
+	if (page === pageMappings.SEARCH) {
+		searchString = $('.searchInfo').data('searchstring');
+		// data element lowercases data variable names
+	}
 
 	$(window).on("popstate", function(e) {
 	    if (e.originalEvent.state !== null) {
-      		$( 'body' ).fadeOut( 120, function () { ajaxNavigate(e.originalEvent.state.page); } );
+      		$( 'body' ).fadeOut( 120, function () { 
+      			ajaxNavigate(e.originalEvent.state.page, {searchString:e.originalEvent.state.searchString, back:true}); 
+      		} );
     	}
 	} );
 
-	if (page === '') {
-		movies = data.movies;
-	} else {
-		selectedMovie = data;
-	}
+	getPageData(page);
 
-	window.history.replaceState({page:page}, '', getUrlPathAfterDomain());
+	window.history.replaceState({page:page, searchString:searchString}, '', getUrlPathAfterDomain());
 
-	pageSetup(page);
+	pageSetup(page, {searchString:searchString, dataCollected:true});
 });
 
-function createDivArray (size) {
-	array = new Array();
-	for (var i = 0; i < size; i++) {
-		array[i] = document.createElement('div');
-	}
-	return array;
-}
-
-function ajaxNavigate(page) {
+function ajaxNavigate(page, data) {
 	var publicParams = '';
 	var hiddenParams = '';
-	if (page === '') {
+	var searchString = '';
+	var request = null;
+	if (page === pageMappings.HOME) {
 		hiddenParams = 'ajax=true';
-		if (typeof movies === 'undefined') hiddenParams += '&load=true';
-		var request = $.ajax({
+		if (typeof blockbusterMovies === 'undefined') hiddenParams += '&load=true';
+		request = $.ajax({
 			url: '/',
 			type: "get",
 			data: publicParams + hiddenParams
 		});	
-	} else {
-		publicParams = "?id=" + selectedMovie.id;
+	} else if (page === pageMappings.MOVIEINFO) {
+		publicParams = "id=" + selectedMovie.id;
 		hiddenParams = "&ajax=true";
-		var request = $.ajax({
+		request = $.ajax({
+			url: "/" + page,
+			type: "get",
+			data: publicParams + hiddenParams
+		});
+	} else if (page === pageMappings.SEARCH) {
+		searchString = data.searchString;
+		publicParams = "search=" + searchString;
+		hiddenParams = '&ajax=true';
+		request = $.ajax({
 			url: "/" + page,
 			type: "get",
 			data: publicParams + hiddenParams
 		});
 	}
-	request.done(function (response, textStatus, jqXHR) {
-		document.body.style.display = 'block';
-		document.body.innerHTML = response;
-		pageSetup(page);
-		window.history.pushState({page:page}, '', '/' + page + publicParams);
-	});
+ 
+	if (request) {
+		request.done(function (response, textStatus, jqXHR) {
+			document.body.style.display = 'block';
+			document.body.innerHTML = response;
+			pageSetup(page, {searchString:searchString});
+			if (publicParams !== '') publicParams = '?' + publicParams;
+			if (typeof data === 'undefined' || !data.back)
+				window.history.pushState({page:page, searchString:searchString}, '', '/' + page + publicParams);
+		});
+	}
 }
 
-function pageSetup(page) {
-	if (page === '') {
-		if (typeof movies === 'undefined') {
-			var data = jQuery.parseJSON( $('.temp_information').data('temp') );
-			movies = data.movies;
+function pageSetup(page, data) {
+	if (page === pageMappings.HOME) {
+		if (typeof blockbusterMovies === 'undefined') {
+			// Case: Enter movie info page directly and then ajax redirects to full movie list page
+			// Data for full movie list page is only gathered when directly entering, not when entering via ajax
+			getPageData(page);
 		}
-		for (var i = 0; i < movies.length; i++) {
-			tbody = document.getElementById('blockbusters');
-			tr = document.createElement('tr');
-			div = document.createElement('div');
-			thumbnail = document.createElement('img');
-			thumbnail.src = movies[i].posters.thumbnail;
-			divArray = createDivArray(5);
-
-			div.id = i;
-
-			$( div ).click(function() {
-				selectedMovie = movies[this.id];
-				$( 'body' ).fadeOut( 120, function () {
-					ajaxNavigate( 'movieInfo' );
-				} );
-			});
-
-			divArray[0].appendChild(thumbnail);
-			divArray[0].id = 'thumbnail';
-			divArray[1].innerHTML = movies[i].title;
-			divArray[1].id = 'title';
-			divArray[2].innerHTML = movies[i].year;
-			divArray[2].id = 'year';
-			divArray[3].innerHTML = movies[i].ratings.critics_score + '%';
-			divArray[3].id = 'score';
-			divArray[4].innerHTML = movies[i].mpaa_rating;
-			divArray[4].id = 'rating';
-
-			for (var y = 0; y < divArray.length; y++) {
-				div.appendChild(divArray[y]);
-			}
-			tr.appendChild(div);
-			tbody.appendChild(tr);
-		}
-	} else {
+		displayMovieList('blockbusters');
+		displayMovieList('inTheatres');
+		displayMovieList('opening');
+		$( '#searchForm' ).submit(function () {
+			$( 'body' ).fadeOut( 120, function() {
+				ajaxNavigate(pageMappings.SEARCH, {searchString:$( this ).find( 'input' ).val()});
+			} );
+			return false;
+		});
+	} else if (page === pageMappings.MOVIEINFO){
 		header = $( 'h1' ).html( selectedMovie.title );
 		document.getElementById('image').src = selectedMovie.posters.profile;
 		document.getElementById('runtime').innerHTML = selectedMovie.runtime;
@@ -117,7 +110,7 @@ function pageSetup(page) {
 		document.getElementById('synopsis').innerHTML = selectedMovie.synopsis;
 		$( '#backButton' ).click( function () {
 			$( 'body' ).fadeOut( 120, function() {
-				ajaxNavigate( '' );
+				ajaxNavigate( pageMappings.HOME );
 			} );
 		});
 
@@ -127,6 +120,18 @@ function pageSetup(page) {
 			div.innerHTML = selectedMovie.abridged_cast[i].name;
 			cast.appendChild(div);
 		}
+	} else if (page === pageMappings.SEARCH) {
+		if (!(data && data.dataCollected)) getPageData(page);
+		displayMovieList('search');
+		if (data) {
+			if (data.searchString) $( '#searchForm' ).find('input').val(data.searchString);
+		}
+		$( '#searchForm' ).submit(function () {
+			$( 'body' ).fadeOut( 120, function() {
+				ajaxNavigate(pageMappings.SEARCH, {searchString:$( this ).find( 'input' ).val()});
+			} );
+			return false;
+		});
 	}
 }
 
@@ -134,4 +139,101 @@ function getUrlPathAfterDomain () {
 	var a = document.createElement('a');
 	a.href = document.URL;
 	return a.pathname + a.search;
+}
+
+function displayMovieList(type) {
+	var selectedList;
+	if (type === 'blockbusters') selectedList = blockbusterMovies;
+	else if (type === 'inTheatres') selectedList = inTheatreMovies;
+	else if (type === 'opening') selectedList = openingMovies;
+	else if (type === 'search') selectedList = searchMovies;
+	for (var i = 0; i < selectedList.length; i++) {
+		tbody = document.getElementById(type);
+		tr = document.createElement('tr');
+		div = document.createElement('div');
+		thumbnail = document.createElement('img');
+
+		if (type === 'search') {
+			thumbnail.src = selectedList[i].posters.thumbnail;
+		} else {
+			if (selectedList[i].ratings.critics_rating == "Certified Fresh") {
+				thumbnail.src = '/assets/fresh.png';
+			} else {
+				thumbnail.src = '/assets/rotten.png';
+			}			
+		}
+
+		divArray = createDivArray(5);
+
+		div.id = i;
+
+		$( div ).click(function() {
+			selectedMovie = selectedList[this.id];
+			$( 'body' ).fadeOut( 120, function () {
+				ajaxNavigate( 'movieInfo' );
+			} );
+		});
+
+		var count = 0;
+		divArray[count].appendChild(thumbnail);
+		divArray[count++].className = 'thumbnail';
+		divArray[count].innerHTML = formatTitleEllipsis(type, selectedList[i].title);
+		divArray[count++].className = 'title';
+
+		if (type === 'search') {
+			divArray[count].innerHTML = selectedList[i].year;
+			divArray[count++].className = 'year';
+		}
+
+		if (selectedList[i].ratings.critics_score != '-1') {
+			divArray[count].innerHTML = selectedList[i].ratings.critics_score + '%';
+		}
+		divArray[count++].className = 'score';
+		divArray[count].innerHTML = selectedList[i].mpaa_rating;
+		divArray[count++].className = 'rating';
+
+		for (var y = 0; y < divArray.length; y++) {
+			div.appendChild(divArray[y]);
+		}
+		tr.appendChild(div);
+		tbody.appendChild(tr);
+	}
+}
+
+function formatTitleEllipsis(type, title) {
+	var TITLE_LENGTH = 0;
+	if (type === 'search') TITLE_LENGTH = 31;
+	else TITLE_LENGTH = 23;
+	if (title.length > TITLE_LENGTH) {
+		title = title.substr(0, TITLE_LENGTH - 1).trim() + '...';
+	}
+	return title;
+}
+
+function getPageData (page) {
+	if (page === pageMappings.HOME) {
+		var blockbusterData = jQuery.parseJSON( $('.blockbusterInfo').data('temp') );
+		var inTheatreData = jQuery.parseJSON( $('.inTheatreInfo').data('temp') );
+		var openingData = jQuery.parseJSON( $('.openingInfo').data('temp') );
+		blockbusterMovies = blockbusterData.movies;
+		inTheatreMovies = inTheatreData.movies;
+		openingMovies = openingData.movies;
+	} else if (page === pageMappings.MOVIEINFO){
+		var selectedMovieData = jQuery.parseJSON( $('.selectedMovieInfo').data('temp') );
+		selectedMovie = selectedMovieData;
+	} else if (page === pageMappings.SEARCH) {
+		// Javascript automatically converts data value to a Javascript object when data value is "{ "movie":[] }"
+		var searchData = $('.searchInfo').data('temp');
+		if ( typeof searchData != 'object' ) searchData = jQuery.parseJSON( $('.searchInfo').data('temp') );
+		searchMovies = searchData.movies;
+	}
+	$( '.infoContainer' ).remove();
+}
+
+function createDivArray (size) {
+	array = new Array();
+	for (var i = 0; i < size; i++) {
+		array[i] = document.createElement('div');
+	}
+	return array;
 }

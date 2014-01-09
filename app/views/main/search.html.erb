@@ -1,0 +1,25 @@
+<%= content_tag :div, class: "pageInfo infoContainer", data: {temp: @page} do %>
+<% end %>
+<%= content_tag :div, class: "searchInfo infoContainer", data: {temp: @search, searchString: @searchString} do %>
+<% end %>
+
+<div id="search-logo-wrapper">
+	<div id="logo"></div>
+	<form class="form-wrapper cf" id="searchForm">
+        <input type="text" placeholder="Search here..." required>
+        <button type="submit">Search</button>
+    </form> 
+</div>
+
+<table id= 'searchTable'>
+	<thead>
+<!-- 		<tr>
+			<th>Title</th>
+			<th>Year</th>
+			<th>Score</th>
+			<th>Rating</th>
+		</tr> -->
+	</thead>
+	<tbody id = 'search'>
+	</tbody>
+</table>
