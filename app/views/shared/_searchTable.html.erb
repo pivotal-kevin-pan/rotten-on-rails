@@ -1,0 +1,18 @@
+<% if @sendData %>
+	<%= content_tag :div, class: "pageInfo infoContainer", data: {temp: @page} do 
+	 end %>
+	<%= content_tag :div, class: "searchInfo infoContainer", data: {temp: @search, searchString: @searchString, pageNumber: @pageNumber} do
+	 end %>
+<% end %>
+<table id= 'searchTable'>
+	<thead>
+<!-- 		<tr>
+			<th>Title</th>
+			<th>Year</th>
+			<th>Score</th>
+			<th>Rating</th>
+		</tr> -->
+	</thead>
+	<tbody id = 'search'>
+	</tbody>
+</table>

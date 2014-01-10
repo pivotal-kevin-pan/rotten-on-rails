@@ -73,10 +73,6 @@ table {
 	border-spacing: 0px;
 }
 
-#searchTable {
-	margin-top: 25px;
-}
-
 table {
 	thead th {
 		text-align: left;
@@ -196,6 +192,43 @@ table {
 	background-image:url('/assets/back_button.png');
 	background-repeat:no-repeat;
 	background-size: 48px 48px;
+}
+
+#paging {
+	margin: 0 auto 0 auto;
+	width: 482px;
+	height: 30px;
+	padding: 14px 0 14px 0;
+}
+
+#paging > li{
+	vertical-align: top;
+	list-style: none;
+	display: inline-block;
+	width: 30px;
+	height: 30px;
+	text-align: center;
+	border-radius: 15px;
+	line-height: 30px;
+	background-color: #F5A4A4;
+	margin-left: 5px;
+	margin-right: 5px;
+	color: white;
+	font-size: 16px;
+	font-weight: bold;
+}
+
+#paging > .selectablePage {
+	cursor: pointer;
+}
+
+#paging > .selectablePage:hover {
+	background-color: #e54040;
+}
+
+#paging > #selectedPage {
+	background-color: #e54040;
+	cursor: default;
 }
 
 /* http://speckyboy.com/2012/02/15/how-to-build-a-stylish-css3-search-box/ */

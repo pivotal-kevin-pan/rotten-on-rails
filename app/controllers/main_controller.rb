@@ -45,19 +45,32 @@ class MainController < ApplicationController
 	end
 
 	def search
+		if (params.has_key?(:page))
+			pageNumber = params[:page]
+		else
+			pageNumber = '1'
+		end
 		if (params.has_key?(:search))
-			uri = URI(@@stringSearchMovies[0] + URI.escape(params[:search]) + @@stringSearchMovies[1] + '1' + @@stringSearchMovies[2] + @@key)
+			uri = URI(@@stringSearchMovies[0] + URI.escape(params[:search]) + @@stringSearchMovies[1] + pageNumber + @@stringSearchMovies[2] + @@key)
 			@search = Net::HTTP.get(uri)
 			@searchString = params[:search]
 			@page = 'search'
+			@pageNumber = pageNumber
+			@sendData = false;
 
 			if params[:ajax] == 'true'
-				render :layout => false
+				if (params.has_key?(:partial))
+					@sendData = true;
+					render partial: "shared/searchTable"
+				else
+					render :layout => false
+				end
 			end
 		else
 			@search = '{ "movies":[] }'
-			@page = 'search'
 			@searchString = ''
+			@page = 'search'
+			@pageNumber = '-1'
 			render 'searchCenter'
 		end
 	end

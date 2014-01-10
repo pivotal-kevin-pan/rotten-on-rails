@@ -1,8 +1,12 @@
-var selectedMovie;
-var blockbusterMovies;
-var inTheatreMovies;
-var openingMovies;
-var searchMovies;
+var selectedMovie = null;
+var blockbusterMovies = null;
+var inTheatreMovies = null;
+var openingMovies = null;
+var searchMovies = null;
+var searchString = '';
+var searchPage = -1;
+var searchTotalItems = -1;
+var SEARCH_ITEMS_PER_PAGE = 7;
 
 pageMappings = {
 	HOME : '',
@@ -10,45 +14,40 @@ pageMappings = {
 	SEARCH: 'search'
 }
 
-$(function() {
-	// var request = $.ajax({
-	// 	url: "http://api.rottentomatoes.com/api/public/v1.0/lists/movies/box_office.json?limit=3&country=ca&apikey=6m25urpddbdyh3d4yxzmgpk7",
-	// 	dataType: "jsonp",
-	// });
-	// request.done(function (dataWeGotViaJsonp) {
-	// 	alert(dataWeGotViaJsonp.movies.length);
-	// });
+transitionMappings = {
+	GENERAL : 'general',
+	SEARCH2SEARCH : 'search2search'
+}
 
+$(function() {
 	var page = $('.pageInfo').data('temp');
-	var searchString = '';
-	if (page === pageMappings.SEARCH) {
-		searchString = $('.searchInfo').data('searchstring');
-		// data element lowercases data variable names
-	}
 
 	$(window).on("popstate", function(e) {
 	    if (e.originalEvent.state !== null) {
-      		$( 'body' ).fadeOut( 120, function () { 
-      			ajaxNavigate(e.originalEvent.state.page, {searchString:e.originalEvent.state.searchString, back:true}); 
-      		} );
+	    	searchString = e.originalEvent.state.searchString;
+      		searchPage = e.originalEvent.state.searchPage;
+      		changePage(e.originalEvent.state.page, transitionMappings.GENERAL, true);
     	}
 	} );
 
-	getPageData(page);
+	getPageData(page); // sets searchString and searchPage
 
-	window.history.replaceState({page:page, searchString:searchString}, '', getUrlPathAfterDomain());
+	window.history.replaceState({page:page, searchString:searchString, searchPage:searchPage}, '', getUrlPathAfterDomain());
 
-	pageSetup(page, {searchString:searchString, dataCollected:true});
+	pageSetup(page, transitionMappings.GENERAL);
 });
 
-function ajaxNavigate(page, data) {
+function ajaxNavigate(page, transition, browserBackButtonPress) {
 	var publicParams = '';
 	var hiddenParams = '';
-	var searchString = '';
 	var request = null;
+	var getPageDataFlag = false;
 	if (page === pageMappings.HOME) {
 		hiddenParams = 'ajax=true';
-		if (typeof blockbusterMovies === 'undefined') hiddenParams += '&load=true';
+		if (blockbusterMovies == null) {
+			getPageDataFlag = true;
+			hiddenParams += '&load=true';
+		}
 		request = $.ajax({
 			url: '/',
 			type: "get",
@@ -63,9 +62,14 @@ function ajaxNavigate(page, data) {
 			data: publicParams + hiddenParams
 		});
 	} else if (page === pageMappings.SEARCH) {
-		searchString = data.searchString;
-		publicParams = "search=" + searchString;
+		getPageDataFlag = true;
+		if (searchString) {
+			publicParams = "search=" + searchString + "&page=" + searchPage;
+		}
 		hiddenParams = '&ajax=true';
+		if (transition == transitionMappings.SEARCH2SEARCH) {
+			hiddenParams += "&partial=true";
+		}
 		request = $.ajax({
 			url: "/" + page,
 			type: "get",
@@ -75,32 +79,36 @@ function ajaxNavigate(page, data) {
  
 	if (request) {
 		request.done(function (response, textStatus, jqXHR) {
-			document.body.style.display = 'block';
-			document.body.innerHTML = response;
-			pageSetup(page, {searchString:searchString});
+			var ajaxContent;
+			if (transition == transitionMappings.GENERAL) ajaxContent = document.getElementById('ajaxContent');
+			else ajaxContent = document.getElementById('ajaxContent_2');
+			ajaxContent.style.display = 'block';
+			ajaxContent.innerHTML = response;
+
+			if (getPageDataFlag) getPageData(page);
+			pageSetup(page, transition);
 			if (publicParams !== '') publicParams = '?' + publicParams;
-			if (typeof data === 'undefined' || !data.back)
-				window.history.pushState({page:page, searchString:searchString}, '', '/' + page + publicParams);
+			if (!browserBackButtonPress)
+				window.history.pushState({
+					page:page, 
+					searchString:searchString, 
+					searchPage:searchPage}, '', '/' + page + publicParams);
 		});
 	}
 }
 
-function pageSetup(page, data) {
+function pageSetup(page, transition) {
 	if (page === pageMappings.HOME) {
-		if (typeof blockbusterMovies === 'undefined') {
-			// Case: Enter movie info page directly and then ajax redirects to full movie list page
-			// Data for full movie list page is only gathered when directly entering, not when entering via ajax
-			getPageData(page);
-		}
 		displayMovieList('blockbusters');
 		displayMovieList('inTheatres');
 		displayMovieList('opening');
 		$( '#searchForm' ).submit(function () {
-			$( 'body' ).fadeOut( 120, function() {
-				ajaxNavigate(pageMappings.SEARCH, {searchString:$( this ).find( 'input' ).val()});
-			} );
+			searchString = $( this ).find( 'input' ).val();
+			searchPage = 1;
+			changePage(pageMappings.SEARCH, transitionMappings.GENERAL, false);
 			return false;
 		});
+		document.onkeydown = function (e) {};
 	} else if (page === pageMappings.MOVIEINFO){
 		header = $( 'h1' ).html( selectedMovie.title );
 		document.getElementById('image').src = selectedMovie.posters.profile;
@@ -109,9 +117,7 @@ function pageSetup(page, data) {
 		document.getElementById('critics_consensus').innerHTML = selectedMovie.critics_consensus;
 		document.getElementById('synopsis').innerHTML = selectedMovie.synopsis;
 		$( '#backButton' ).click( function () {
-			$( 'body' ).fadeOut( 120, function() {
-				ajaxNavigate( pageMappings.HOME );
-			} );
+			changePage(pageMappings.HOME, transitionMappings.GENERAL, false);
 		});
 
 		var cast = document.getElementById('cast');
@@ -120,16 +126,19 @@ function pageSetup(page, data) {
 			div.innerHTML = selectedMovie.abridged_cast[i].name;
 			cast.appendChild(div);
 		}
+		$(document).keydown(function (e) {});
 	} else if (page === pageMappings.SEARCH) {
-		if (!(data && data.dataCollected)) getPageData(page);
-		displayMovieList('search');
-		if (data) {
-			if (data.searchString) $( '#searchForm' ).find('input').val(data.searchString);
+		if (searchString) {
+			displayMovieList('search');
+			if (transition == transitionMappings.GENERAL) setupPagingButtonsAndSetupKeys();
+		} else {
+			$(document).keydown(function (e) {});
 		}
+		$( '#searchForm' ).find('input').val(searchString);
 		$( '#searchForm' ).submit(function () {
-			$( 'body' ).fadeOut( 120, function() {
-				ajaxNavigate(pageMappings.SEARCH, {searchString:$( this ).find( 'input' ).val()});
-			} );
+			searchString = $( this ).find( 'input' ).val();
+			searchPage = 1;
+			changePage(pageMappings.SEARCH, transitionMappings.GENERAL, false);
 			return false;
 		});
 	}
@@ -153,15 +162,8 @@ function displayMovieList(type) {
 		div = document.createElement('div');
 		thumbnail = document.createElement('img');
 
-		if (type === 'search') {
-			thumbnail.src = selectedList[i].posters.thumbnail;
-		} else {
-			if (selectedList[i].ratings.critics_rating == "Certified Fresh") {
-				thumbnail.src = '/assets/fresh.png';
-			} else {
-				thumbnail.src = '/assets/rotten.png';
-			}			
-		}
+		if (type === 'search') thumbnail.src = selectedList[i].posters.thumbnail;
+		else setThumbnailFreshOrRotten(selectedList[i].ratings.critics_rating, thumbnail);
 
 		divArray = createDivArray(5);
 
@@ -169,9 +171,7 @@ function displayMovieList(type) {
 
 		$( div ).click(function() {
 			selectedMovie = selectedList[this.id];
-			$( 'body' ).fadeOut( 120, function () {
-				ajaxNavigate( 'movieInfo' );
-			} );
+			changePage(pageMappings.MOVIEINFO, transitionMappings.GENERAL, false);
 		});
 
 		var count = 0;
@@ -200,16 +200,6 @@ function displayMovieList(type) {
 	}
 }
 
-function formatTitleEllipsis(type, title) {
-	var TITLE_LENGTH = 0;
-	if (type === 'search') TITLE_LENGTH = 31;
-	else TITLE_LENGTH = 23;
-	if (title.length > TITLE_LENGTH) {
-		title = title.substr(0, TITLE_LENGTH - 1).trim() + '...';
-	}
-	return title;
-}
-
 function getPageData (page) {
 	if (page === pageMappings.HOME) {
 		var blockbusterData = jQuery.parseJSON( $('.blockbusterInfo').data('temp') );
@@ -222,10 +212,16 @@ function getPageData (page) {
 		var selectedMovieData = jQuery.parseJSON( $('.selectedMovieInfo').data('temp') );
 		selectedMovie = selectedMovieData;
 	} else if (page === pageMappings.SEARCH) {
+		// data element lowercases data variable names
+		if (searchString === '') {
+			searchString = $('.searchInfo').data('searchstring');
+			searchPage = $('.searchInfo').data('pagenumber');
+		}
 		// Javascript automatically converts data value to a Javascript object when data value is "{ "movie":[] }"
 		var searchData = $('.searchInfo').data('temp');
 		if ( typeof searchData != 'object' ) searchData = jQuery.parseJSON( $('.searchInfo').data('temp') );
 		searchMovies = searchData.movies;
+		searchTotalItems = searchData.total;
 	}
 	$( '.infoContainer' ).remove();
 }
@@ -236,4 +232,105 @@ function createDivArray (size) {
 		array[i] = document.createElement('div');
 	}
 	return array;
+}
+
+function formatTitleEllipsis(type, title) {
+	var TITLE_LENGTH = 0;
+	if (type === 'search') TITLE_LENGTH = 31;
+	else TITLE_LENGTH = 23;
+	if (title.length > TITLE_LENGTH) {
+		title = title.substr(0, TITLE_LENGTH - 1).trim() + '...';
+	}
+	return title;
+}
+
+function setThumbnailFreshOrRotten (rating, thumbnail) {
+	if (rating == "Certified Fresh") {
+		thumbnail.src = '/assets/fresh.png';
+	} else {
+		thumbnail.src = '/assets/rotten.png';
+	}
+}
+
+function setupPagingButtonsAndSetupKeys () {
+	var ul = document.getElementById('paging');
+	var numberOfListElements = $(ul).children('li').size();
+	var numberOfListElementsBeforeCenter = numberOfListElements/2 - 0.5;
+	var totalPages = Math.ceil(searchTotalItems / SEARCH_ITEMS_PER_PAGE);
+	if (totalPages > 25) totalPages = 25;
+	var pageCounter = 1;
+	if (searchPage - numberOfListElementsBeforeCenter > 0 
+		&& searchPage + numberOfListElementsBeforeCenter <= totalPages) {
+		pageCounter = searchPage - numberOfListElementsBeforeCenter;
+	} else if (searchPage - numberOfListElementsBeforeCenter > 0) {
+		pageCounter = totalPages - numberOfListElements + 1;
+		if (pageCounter <= 0) pageCounter = 1;
+		// pageCounter = numberOfListElements - totalPages + 1;
+	} else {
+		pageCounter = 1;
+	}
+	$( '#paging' ).children().each(function() {
+		if (pageCounter <= totalPages) {
+			if (pageCounter == searchPage) this.id = 'selectedPage';
+			else {
+				this.className = 'selectablePage';
+				this.id = ''; 
+				var transferInfo_pageCounter = pageCounter;
+				this.onclick = function () {
+					searchPage = transferInfo_pageCounter;
+					setupPagingButtonsAndSetupKeys();
+					changePage(pageMappings.SEARCH, transitionMappings.SEARCH2SEARCH, false);
+				};
+			}
+			this.innerHTML = pageCounter++;
+		}
+	});
+	var keyDownFunction;
+	if (searchPage < totalPages && searchPage > 1) {
+		keyDownFunction = bothKeysEnable;
+	} else if (searchPage > 1) {
+		keyDownFunction = leftKeyEnable;
+	} else if (searchPage < totalPages) {
+		keyDownFunction = rightKeyEnable;
+	} else {
+		keyDownFunction = function (e) {};
+	}
+	document.onkeydown = keyDownFunction;
+}
+
+function leftKeyEnable (e) {
+    if (e.keyCode == 37) {
+    	searchPage -= 1;
+    	setupPagingButtonsAndSetupKeys();
+		changePage(pageMappings.SEARCH, transitionMappings.SEARCH2SEARCH, false);
+    }
+}
+
+function rightKeyEnable(e) {
+    if (e.keyCode == 39) {
+        searchPage += 1;
+        setupPagingButtonsAndSetupKeys();
+		changePage(pageMappings.SEARCH, transitionMappings.SEARCH2SEARCH, false);  
+    }	
+}
+
+function bothKeysEnable(e) {
+    if (e.keyCode == 37) { 
+       	searchPage -= 1;
+       	setupPagingButtonsAndSetupKeys();
+		changePage(pageMappings.SEARCH, transitionMappings.SEARCH2SEARCH, false);
+    }
+    if (e.keyCode == 39) {
+        searchPage += 1;
+        setupPagingButtonsAndSetupKeys();
+		changePage(pageMappings.SEARCH, transitionMappings.SEARCH2SEARCH, false); 
+    }
+}
+
+function changePage (page, transition, browserBackButtonPress) {
+	var ajaxContentDivId = '#ajaxContent';
+	if (transition == transitionMappings.SEARCH2SEARCH) ajaxContentDivId = '#ajaxContent_2';
+	$( ajaxContentDivId ).fadeOut( 120, function() {
+		ajaxNavigate(page, transition, browserBackButtonPress);
+	} );	
 }
