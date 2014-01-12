@@ -1,55 +1,33 @@
-<%= content_tag :div, class: "pageInfo infoContainer", data: {temp: @page} do %>
-<% end %>
-<%= content_tag :div, class: "blockbusterInfo infoContainer", data: {temp: @block} do %>
-<% end %>
-<%= content_tag :div, class: "inTheatreInfo infoContainer", data: {temp: @theatre} do %>
-<% end %>
-<%= content_tag :div, class: "openingInfo infoContainer", data: {temp: @opening} do %>
-<% end %>
+<%= content_tag :div, class: "pageInfo infoContainer", data: {temp: @page} do end %>
 <div id="ajaxContent">
 	<div id="mainContent">
 		<div id="col1">
 			<h1>Blockbusters</h1>
 			<table id= 'blockbusterTable'>
-				<thead>
-			<!-- 		<tr>
-						<th>Title</th>
-						<th>Year</th>
-						<th>Score</th>
-						<th>Rating</th>
-					</tr> -->
-				</thead>
+				<thead></thead>
 				<tbody id = 'blockbusters'>
+					<% @moviesJSON = @blockJSON %>
+					<%= render 'shared/movieTable' %>
 				</tbody>
 			</table>
 		</div>
 		<div id="col2">
 			<h1>In Theatres</h1>
 			<table id= 'inTheatresTable'>
-				<thead>
-			<!-- 		<tr>
-						<th>Title</th>
-						<th>Year</th>
-						<th>Score</th>
-						<th>Rating</th>
-					</tr> -->
-				</thead>
+				<thead></thead>
 				<tbody id = 'inTheatres'>
+					<% @moviesJSON = @theatreJSON %>
+					<%= render 'shared/movieTable' %>
 				</tbody>
 			</table>
 		</div>
 		<div id="col3">
 			<h1>Opening</h1>
 			<table id= 'openingTable'>
-				<thead>
-			<!-- 		<tr>
-						<th>Title</th>
-						<th>Year</th>
-						<th>Score</th>
-						<th>Rating</th>
-					</tr> -->
-				</thead>
+				<thead></thead>
 				<tbody id = 'opening'>
+					<% @moviesJSON = @openingJSON %>
+					<%= render 'shared/movieTable' %>
 				</tbody>
 			</table>
 		</div>

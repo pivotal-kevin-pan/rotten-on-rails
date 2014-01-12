@@ -1,0 +1,39 @@
+<% 
+	@moviesJSON.each do |movie|
+%>
+	<tr>
+		<td id="<%= movie['id'] %>" class="movieLink">
+			<% 	if @page.eql? 'search'
+					imageURL = movie['posters']['thumbnail']
+				else
+					if movie['ratings']['critics_rating'].eql? 'Certified Fresh'
+						imageURL = "/assets/fresh.png"
+					else
+						imageURL = "/assets/rotten.png"
+					end
+				end %>
+
+			<div class="thumbnail"><img src=<%= imageURL %>></div>
+			<div class="title">
+					<% if movie['title'].length > @TITLE_LENGTH %>
+						<%
+							output = movie['title'][0..(@TITLE_LENGTH - 1)]
+							output = (output.strip! || output) + '...'
+						%>
+					<% else %>
+						<% output = movie['title'] %>
+					<% end %>
+					<%= output %>
+			</div>
+			<% if @page.eql? 'search' %>
+				<div class="year"><%= movie['year'] %></div>
+			<% end %>
+			<div class="score">
+				<% if movie['ratings']['critics_score'] != -1 %>
+					<%= movie['ratings']['critics_score'] %>%
+				<% end %>
+			</div>
+			<div class="rating"><%= movie['mpaa_rating'] %></div>
+		</td>
+	</tr>
+<% end %>

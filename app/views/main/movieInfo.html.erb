@@ -1,20 +1,26 @@
-<%= content_tag :div, class: "pageInfo infoContainer", data: {temp: @page} do %>
-<% end %>
-<%= content_tag :div, class: "selectedMovieInfo infoContainer", data: {temp: @req} do %>
-<% end %>
+<%= content_tag :div, class: "pageInfo infoContainer", data: {temp: @page} do end %>
 <div id="ajaxContent">
 	<div id='backButton'></div>
-	<h1></h1>
+	<h1><%= @movieInfo['title'] %></h1>
+<% if !@invalidMovieId %>
 	<div id="summary">
 		<div id="summary_colone">
-			<img id='image'/>
+			<img id='image' src='<%= @movieInfo['posters']['profile'] %>' />
 		</div>
 		<div id="summary_coltwo">
-			<div><span class="header">Runtime: </span><span id="runtime"></span> minutes</div>
-			<div><span class="header">Rotten Tomatoes Score: </span><span id="score"></span>%</div>
-			<div><span class="header">Critics Consensus:</span><div id="critics_consensus"></div></div>
-			<div><span class="header">Synopsis:</span><div id="synopsis"></div></div>
-			<div><span class="header">Cast:</span><div id="cast"></div></div>
+			<div><span class="header">Runtime: </span><span id="runtime"><%= @movieInfo['runtime'] %></span> minutes</div>
+			<div><span class="header">Rotten Tomatoes Score: </span><span id="score"><%= @movieInfo['ratings']['critics_score'] %></span>%</div>
+			<div><span class="header">Critics Consensus:</span><div id="critics_consensus"><%= @movieInfo['critics_consensus'] %></div></div>
+			<div><span class="header">Synopsis:</span><div id="synopsis"><%= @movieInfo['synopsis'] %></div></div>
+			<div>
+				<span class="header">Cast:</span>
+				<div id="cast">
+					<% @movieInfo['abridged_cast'].each do |cast| %>
+						<div><%= cast['name'] %></div>
+					<% end %>
+				</div>
+			</div>
 		</div>
 	</div>
+<% end %>
 </div>

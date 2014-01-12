@@ -77,17 +77,18 @@ table {
 	thead th {
 		text-align: left;
 	}
-	tbody tr > div{
+	tbody tr > td{
 		background-color: #F0F0F0;
 		margin-bottom: 16px;
 		padding: 8px;
 		cursor: pointer;
 		border-radius: 5px;
+		display: block;
 	}
-	tbody tr > div:hover{
+	tbody tr > td:hover{
 		background-color: white;
 	}
-	tbody tr > div > div {
+	tbody tr > td > div {
 		display: inline-block;
 		vertical-align: middle;
 	}
@@ -100,7 +101,7 @@ table {
 		width: 28px;
 	}
 	.title { 
-		width: 220px; 
+		width: 208px; 
 		font-weight: bold;
 		padding-right: 10px;
 		white-space: nowrap;
@@ -229,6 +230,16 @@ table {
 #paging > #selectedPage {
 	background-color: #e54040;
 	cursor: default;
+}
+
+#spinner {
+	position: absolute;
+	width: 30px;
+	height: 30px;
+	top: 50%;
+	left: 50%;
+	margin-top: -15px;
+	margin-left: -15px;
 }
 
 /* http://speckyboy.com/2012/02/15/how-to-build-a-stylish-css3-search-box/ */

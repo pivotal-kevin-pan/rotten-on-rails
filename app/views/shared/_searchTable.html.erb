@@ -1,18 +1,24 @@
-<% if @sendData %>
-	<%= content_tag :div, class: "pageInfo infoContainer", data: {temp: @page} do 
-	 end %>
-	<%= content_tag :div, class: "searchInfo infoContainer", data: {temp: @search, searchString: @searchString, pageNumber: @pageNumber} do
-	 end %>
-<% end %>
+<ul id="paging">
+	<% for i in @startingPageToDisplaySearchPageLinks..(@startingPageToDisplaySearchPageLinks + @NUMBER_OF_PAGE_BUTTONS - 1) %>
+		<li 
+			<% if (i.to_s).eql? @pageNumber %>
+				<%= "id = selectedPage" %>
+			<% elsif i <= @totalPages %>
+				<%= "class = selectablePage" %>
+			<% end %>
+		>
+			<% if i <= @totalPages %> 
+				<%= i %> 
+			<% end %> 
+		</li>
+	<% end %>
+</ul>
+
 <table id= 'searchTable'>
 	<thead>
-<!-- 		<tr>
-			<th>Title</th>
-			<th>Year</th>
-			<th>Score</th>
-			<th>Rating</th>
-		</tr> -->
 	</thead>
 	<tbody id = 'search'>
+		<% @moviesJSON = @searchJSON %>
+		<%= render 'shared/movieTable' %>
 	</tbody>
 </table>
